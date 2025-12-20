@@ -31,5 +31,6 @@ export async function apiPost<T>(path: string, body: any): Promise<T> {
 
 export async function apiDelete(path: string): Promise<void> {
   const res = await fetch(`${API_BASE}/${path}`, { method: 'DELETE' });
+  if (res.status === 204) return;
   await handleRes(res);
 }

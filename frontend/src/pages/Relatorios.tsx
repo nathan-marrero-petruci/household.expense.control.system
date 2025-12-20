@@ -29,6 +29,7 @@ export default function Relatorios() {
 
   useEffect(() => { load(); }, []);
 
+  // Normaliza os campos recebidos (aceita PorPessoa/Totais ou porPessoa/totais)
   const lista = dados?.PorPessoa ?? dados?.porPessoa ?? [];
   const totais = dados?.Totais ?? (dados?.totais ? {
     TotalReceitas: dados.totais.totalReceitas ?? 0,
