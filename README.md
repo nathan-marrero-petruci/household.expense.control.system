@@ -79,11 +79,6 @@ Base URL: `/api`
 		}
 		```
 
-Observações sobre serialização e respostas
-------------------------------------------
-- O backend evita exceções de ciclo de referência no JSON configurando `ReferenceHandler.IgnoreCycles` nas opções de serialização. Isso permite retornar entidades EF com navegações sem lançar erro de ciclo.
-- Exclusões bem-sucedidas retornam `204 No Content`.
-
 Como executar localmente
 ------------------------
 Pré-requisitos:
@@ -134,10 +129,3 @@ curl -X POST http://localhost:5256/api/categorias -H "Content-Type: application/
 curl -X POST http://localhost:5256/api/transacoes -H "Content-Type: application/json" \
 	-d '{"descricao":"Venda","valor":1000.0,"tipo":1,"pessoaId":"GUID","categoriaId":"GUID"}'
 ```
-
-Notas técnicas e decisões
--------------------------
-- Persistência: SQLite local (`backend/ExpenseApi/app.db`) para simplicidade e persistência entre reinícios.
-- Serialização JSON: configurada para ignorar ciclos de referência (see `Program.cs`).
-- Frontend: o helper `frontend/src/services/api.ts` trata respostas `204 No Content` e erros JSON para evitar exceções ao tentar parsear corpo vazio.
-- Boas práticas: para APIs maiores, recomenda-se usar DTOs (ex.: `TransacaoCreateDto`) em vez de expor diretamente entidades EF nas rotas de entrada/saída.
