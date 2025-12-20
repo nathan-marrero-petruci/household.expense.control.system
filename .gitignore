@@ -1,1 +1,45 @@
-# .NET / Visual Studio.vs/*.user*.suo*.userosscache*.sln.docstates# Build outputsbin/obj/**/bin/**/obj/# IDEs.vscode/.idea/# SQLite local DB (não versionar)app.dbbackend/ExpenseApi/app.db# NuGet / packages*.nupkgpackages/# Logs*.lognpm-debug.log*yarn-error.log*# Node / frontendnode_modules/dist/build/# Environment files.env.env.*.local# OS.DS_StoreThumbs.db# Test coverage / reportscoverage/coverage.*# Misc DB files*.db*.sqlite*.sqlite3
+# .gitignore for household.expense.control.system
+
+# Build outputs
+bin/
+obj/
+
+# Backend local DB (do not track local SQLite files)
+app.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Specific backend DB files (SQLite WAL/SHM)
+backend/ExpenseApi/app.db
+backend/ExpenseApi/app.db-shm
+backend/ExpenseApi/app.db-wal
+
+# IDEs
+.vscode/
+.idea/
+
+# NuGet / packages
+*.nupkg
+packages/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+
+# Environment files
+.env
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
