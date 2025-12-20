@@ -46,42 +46,158 @@ Descrição (texto);
 Finalidade (despesa/receita/ambas)
 
 
-Cadastro de transações: 
+# household.expense.control.system
 
-Deverá ser implementado um cadastro contendo as funcionalidades básicas de gerenciamento: criação e listagem.
+Este repositório contém uma aplicação simples para controle de gastos residenciais, composta por:
 
-Caso o usuário informe um menor de idade (menor de 18), apenas despesas deverão ser aceitas.
+- Backend: Web API em C# / .NET (pasta `backend/ExpenseApi`).
+- Frontend: SPA em React + TypeScript (pasta `frontend`).
+- Persistência local: SQLite (arquivo `backend/ExpenseApi/app.db`).
 
-O cadastro de transação deverá conter:
+Objetivo
+-------
+Fornecer um sistema mínimo funcional para cadastrar Pessoas, Categorias e Transações, com regras de negócio básicas e endpoints REST para criação, listagem e exclusão.
 
-Identificador (deve ser um valor único gerado automaticamente);
-Descrição (texto);
-Valor (número decimal positivo);
-Tipo (despesa/receita);
-Categoria: restringir a utilização de categorias conforme o valor definido no campo finalidade. Ex.: se o tipo da transação é despesa, não poderá utilizar uma categoria que tenha a finalidade receita.
-Pessoa (identificador da pessoa do cadastro anterior);
+Principais funcionalidades implementadas
+--------------------------------------
+- Cadastro de Pessoas: criação, listagem e deleção. Ao deletar uma pessoa, as transações relacionadas são removidas.
+- Cadastro de Categorias: criação e listagem. Cada categoria define uma `Finalidade` (Despesa / Receita / Ambas).
+- Cadastro de Transações: criação e listagem. Regras aplicadas:
+	- Valores devem ser positivos.
+	- Menores de 18 anos só podem registrar despesas.
+	- A categoria deve ser compatível com o tipo da transação (Despesa/Receita).
+- Relatórios simples: totais por pessoa (receitas, despesas, saldo).
 
+Estrutura do projeto
+--------------------
+- `backend/ExpenseApi/Controllers` — controladores REST (PessoasController, CategoriasController, TransacoesController).
+- `backend/ExpenseApi/Models` — modelos de domínio (`Pessoa`, `Categoria`, `Transacao`).
+- `backend/ExpenseApi/Data` — `AppDbContext` (EF Core + SQLite).
+- `frontend/src/pages` — páginas React (Pessoas, Categorias, Transacoes, Relatorios).
+- `frontend/src/services/api.ts` — helper central para chamadas à API.
 
-Consulta de totais por pessoa:
+Modelos (resumido)
+------------------
+- `Pessoa`:
+	- `Id: Guid`
+	- `Nome: string`
+	- `Idade: int`
 
-Deverá listar todas as pessoas cadastradas, exibindo o total de receitas, despesas e o saldo (receita – despesa) de cada uma.
+- `Categoria`:
+	- `Id: Guid`
+	- `Descricao: string`
+	- `Finalidade: enum {Despesa, Receita, Ambas}`
 
-Ao final da listagem anterior, deverá exibir o total geral de todas as pessoas incluindo o total de receitas, total de despesas e o saldo líquido.
+- `Transacao`:
+	- `Id: Guid`
+	- `Descricao: string?`
+	- `Valor: decimal`
+	- `Tipo: enum {Despesa, Receita}`
+	- `CategoriaId: Guid`
+	- `PessoaId: Guid`
 
+Regras de negócio importantes
+----------------------------
+- Menores de 18 só podem criar transações do tipo `Despesa`.
+- Categoria deve aceitar o tipo de transação (ex.: categoria marcada apenas para `Receita` não aceita transação do tipo `Despesa`).
 
+API (endpoints principais)
+--------------------------
+Base URL: `/api`
 
-Consulta de totais por categoria (opcional):
+- Pessoas
+	- `GET /api/pessoas` — lista pessoas.
+	- `POST /api/pessoas` — cria pessoa. Body JSON: `{ "nome": "Fulano", "idade": 30 }`.
+	- `DELETE /api/pessoas/{id}` — remove pessoa (retorna `204 No Content`).
 
-Deverá listar todas as categorias cadastradas, exibindo o total de receitas, despesas e o saldo (receita – despesa) de cada uma.
+- Categorias
+	- `GET /api/categorias` — lista categorias.
+	- `POST /api/categorias` — cria categoria. Body JSON: `{ "descricao": "Alimentação", "finalidade": 0 }` (usar enum conforme implementação).
 
-Ao final da listagem anterior, deverá exibir o total geral de todas as categorias incluindo o total de receitas, total de despesas e o saldo líquido.
+- Transações
+	- `GET /api/transacoes` — lista transações (inclui `Pessoa` e `Categoria`).
+	- `POST /api/transacoes` — cria transação. Exemplo de body JSON:
+		```json
+		{
+			"descricao": "Compra mercado",
+			"valor": 120.50,
+			"tipo": 0,
+			"pessoaId": "GUID_DA_PESSOA",
+			"categoriaId": "GUID_DA_CATEGORIA"
+		}
+		```
 
+Observações sobre serialização e respostas
+------------------------------------------
+- O backend evita exceções de ciclo de referência no JSON configurando `ReferenceHandler.IgnoreCycles` nas opções de serialização. Isso permite retornar entidades EF com navegações sem lançar erro de ciclo.
+- Exclusões bem-sucedidas retornam `204 No Content`.
 
+Como executar localmente
+------------------------
+Pré-requisitos:
+- .NET SDK 9 (ou versão compatível com o projeto)
+- Node.js + npm
 
-Critérios de avaliação:
-A avaliação do teste técnico será baseada nos seguintes pontos:
+1) Backend
 
-Aderência às regras de negócio;
-Atenção aos detalhes;
-Qualidade e legibilidade do código;
-Boas práticas em .NET e React.
+```bash
+cd backend/ExpenseApi
+dotnet build
+dotnet run
+```
+
+Por padrão a API inicia em `http://localhost:5256` (ver output do `dotnet run`). O banco SQLite local é criado em `backend/ExpenseApi/app.db`.
+
+2) Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O frontend comunica com a API via proxy (`/api`) configurado no Vite.
+
+Exemplos de uso com `curl`
+-------------------------
+- Criar pessoa:
+```bash
+curl -X POST http://localhost:5256/api/pessoas -H "Content-Type: application/json" \
+	-d '{"nome":"Teste","idade":21}'
+```
+
+- Deletar pessoa (espera `204`):
+```bash
+curl -X DELETE http://localhost:5256/api/pessoas/<ID>
+```
+
+- Criar categoria:
+```bash
+curl -X POST http://localhost:5256/api/categorias -H "Content-Type: application/json" \
+	-d '{"descricao":"Salário","finalidade":1}'
+```
+
+- Criar transação (substitua GUIDs):
+```bash
+curl -X POST http://localhost:5256/api/transacoes -H "Content-Type: application/json" \
+	-d '{"descricao":"Venda","valor":1000.0,"tipo":1,"pessoaId":"GUID","categoriaId":"GUID"}'
+```
+
+Notas técnicas e decisões
+-------------------------
+- Persistência: SQLite local (`backend/ExpenseApi/app.db`) para simplicidade e persistência entre reinícios.
+- Serialização JSON: configurada para ignorar ciclos de referência (see `Program.cs`).
+- Frontend: o helper `frontend/src/services/api.ts` trata respostas `204 No Content` e erros JSON para evitar exceções ao tentar parsear corpo vazio.
+- Boas práticas: para APIs maiores, recomenda-se usar DTOs (ex.: `TransacaoCreateDto`) em vez de expor diretamente entidades EF nas rotas de entrada/saída.
+
+Contribuição
+------------
+Pull requests são bem-vindos. Para alterações grandes, crie uma branch com nome descritivo e abra um PR para revisão.
+
+Contato
+-------
+Autor/Contato: veja o repositório remoto configurado no `git remote -v`.
+
+Licença
+-------
+Projeto fornecido sem licença específica (use conforme combinado com o avaliador/interessado).
